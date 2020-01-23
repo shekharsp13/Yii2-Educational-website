@@ -1,0 +1,15 @@
+/* .margin-top {
+	margin-top: 50px;
+} */
+.red {
+	background-color: red;
+}
+.navbar-brand {
+	color: #fff;
+}
+a {
+	color : #fff;
+}
+.warp-inner {
+	min-height: 650px;
+}
