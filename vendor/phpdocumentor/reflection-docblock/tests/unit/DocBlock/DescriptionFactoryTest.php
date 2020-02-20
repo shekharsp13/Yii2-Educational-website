@@ -1,34 +1,47 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * This file is part of phpDocumentor.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  *
- * @copyright 2010-2015 Mike van Riel<mike@phpdoc.org>
- * @license   http://www.opensource.org/licenses/mit-license.php MIT
- * @link      http://phpdoc.org
+ * @link http://phpdoc.org
  */
 
 namespace phpDocumentor\Reflection\DocBlock;
 
+use Exception;
 use Mockery as m;
-use phpDocumentor\Reflection\DocBlock\Tags\Link;
+use phpDocumentor\Reflection\DocBlock\Tags\InvalidTag;
+use phpDocumentor\Reflection\DocBlock\Tags\Link as LinkTag;
 use phpDocumentor\Reflection\Types\Context;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @coversDefaultClass \phpDocumentor\Reflection\DocBlock\DescriptionFactory
  * @covers ::<private>
  */
-class DescriptionFactoryTest extends \PHPUnit_Framework_TestCase
+class DescriptionFactoryTest extends TestCase
 {
     /**
+     * Call Mockery::close after each test.
+     */
+    public function tearDown() : void
+    {
+        m::close();
+    }
+
+    /**
+     * @uses \phpDocumentor\Reflection\DocBlock\Description
+     *
      * @covers ::__construct
      * @covers ::create
-     * @uses         phpDocumentor\Reflection\DocBlock\Description
      * @dataProvider provideSimpleExampleDescriptions
      */
-    public function testDescriptionCanParseASimpleString($contents)
+    public function testDescriptionCanParseASimpleString(string $contents) : void
     {
         $tagFactory = m::mock(TagFactory::class);
         $tagFactory->shouldReceive('create')->never();
@@ -40,12 +53,13 @@ class DescriptionFactoryTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * @uses \phpDocumentor\Reflection\DocBlock\Description
+     *
      * @covers ::__construct
      * @covers ::create
-     * @uses         phpDocumentor\Reflection\DocBlock\Description
      * @dataProvider provideEscapeSequences
      */
-    public function testEscapeSequences($contents, $expected)
+    public function testEscapeSequences(string $contents, string $expected) : void
     {
         $tagFactory = m::mock(TagFactory::class);
         $tagFactory->shouldReceive('create')->never();
@@ -57,15 +71,16 @@ class DescriptionFactoryTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * @uses \phpDocumentor\Reflection\DocBlock\Description
+     * @uses \phpDocumentor\Reflection\DocBlock\Tags\Link
+     * @uses \phpDocumentor\Reflection\DocBlock\Tags\BaseTag
+     * @uses \phpDocumentor\Reflection\DocBlock\Tags\Formatter\PassthroughFormatter
+     * @uses \phpDocumentor\Reflection\Types\Context
+     *
      * @covers ::__construct
      * @covers ::create
-     * @uses   phpDocumentor\Reflection\DocBlock\Description
-     * @uses   phpDocumentor\Reflection\DocBlock\Tags\Link
-     * @uses   phpDocumentor\Reflection\DocBlock\Tags\BaseTag
-     * @uses   phpDocumentor\Reflection\DocBlock\Tags\Formatter\PassthroughFormatter
-     * @uses   phpDocumentor\Reflection\Types\Context
      */
-    public function testDescriptionCanParseAStringWithInlineTag()
+    public function testDescriptionCanParseAStringWithInlineTag() : void
     {
         $contents   = 'This is text for a {@link http://phpdoc.org/ description} that uses an inline tag.';
         $context    = new Context('');
@@ -73,8 +88,7 @@ class DescriptionFactoryTest extends \PHPUnit_Framework_TestCase
         $tagFactory->shouldReceive('create')
             ->once()
             ->with('@link http://phpdoc.org/ description', $context)
-            ->andReturn(new Link('http://phpdoc.org/', new Description('description')))
-        ;
+            ->andReturn(new LinkTag('http://phpdoc.org/', new Description('description')));
 
         $factory     = new DescriptionFactory($tagFactory);
         $description = $factory->create($contents, $context);
@@ -83,15 +97,16 @@ class DescriptionFactoryTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * @uses \phpDocumentor\Reflection\DocBlock\Description
+     * @uses \phpDocumentor\Reflection\DocBlock\Tags\Link
+     * @uses \phpDocumentor\Reflection\DocBlock\Tags\BaseTag
+     * @uses \phpDocumentor\Reflection\DocBlock\Tags\Formatter\PassthroughFormatter
+     * @uses \phpDocumentor\Reflection\Types\Context
+     *
      * @covers ::__construct
      * @covers ::create
-     * @uses   phpDocumentor\Reflection\DocBlock\Description
-     * @uses   phpDocumentor\Reflection\DocBlock\Tags\Link
-     * @uses   phpDocumentor\Reflection\DocBlock\Tags\BaseTag
-     * @uses   phpDocumentor\Reflection\DocBlock\Tags\Formatter\PassthroughFormatter
-     * @uses   phpDocumentor\Reflection\Types\Context
      */
-    public function testDescriptionCanParseAStringStartingWithInlineTag()
+    public function testDescriptionCanParseAStringStartingWithInlineTag() : void
     {
         $contents   = '{@link http://phpdoc.org/ This} is text for a description that starts with an inline tag.';
         $context    = new Context('');
@@ -99,8 +114,7 @@ class DescriptionFactoryTest extends \PHPUnit_Framework_TestCase
         $tagFactory->shouldReceive('create')
             ->once()
             ->with('@link http://phpdoc.org/ This', $context)
-            ->andReturn(new Link('http://phpdoc.org/', new Description('This')))
-        ;
+            ->andReturn(new LinkTag('http://phpdoc.org/', new Description('This')));
 
         $factory     = new DescriptionFactory($tagFactory);
         $description = $factory->create($contents, $context);
@@ -109,11 +123,12 @@ class DescriptionFactoryTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * @uses \phpDocumentor\Reflection\DocBlock\Description
+     *
      * @covers ::__construct
      * @covers ::create
-     * @uses   phpDocumentor\Reflection\DocBlock\Description
      */
-    public function testIfSuperfluousStartingSpacesAreRemoved()
+    public function testIfSuperfluousStartingSpacesAreRemoved() : void
     {
         $factory         = new DescriptionFactory(m::mock(TagFactory::class));
         $descriptionText = <<<DESCRIPTION
@@ -150,11 +165,36 @@ DESCRIPTION;
     }
 
     /**
+     * @uses \phpDocumentor\Reflection\DocBlock\Description
+     * @uses \phpDocumentor\Reflection\DocBlock\Tags\InvalidTag
+     * @uses \phpDocumentor\Reflection\DocBlock\Tags\Formatter\PassthroughFormatter
+     * @uses \phpDocumentor\Reflection\Types\Context
+     *
+     * @covers ::__construct
+     * @covers ::create
+     */
+    public function testDescriptionWithBrokenInlineTags() : void
+    {
+        $contents   = 'This {@see $name} is a broken use case, but used in real life.';
+        $context    = new Context('');
+        $tagFactory = m::mock(TagFactory::class);
+        $tagFactory->shouldReceive('create')
+            ->once()
+            ->with('@see $name', $context)
+            ->andReturn(InvalidTag::create('$name', 'see', new Exception()));
+
+        $factory     = new DescriptionFactory($tagFactory);
+        $description = $factory->create($contents, $context);
+
+        $this->assertSame($contents, $description->render());
+    }
+
+    /**
      * Provides a series of example strings that the parser should correctly interpret and return.
      *
      * @return string[][]
      */
-    public function provideSimpleExampleDescriptions()
+    public function provideSimpleExampleDescriptions() : array
     {
         return [
             ['This is text for a description.'],
@@ -164,7 +204,10 @@ DESCRIPTION;
         ];
     }
 
-    public function provideEscapeSequences()
+    /**
+     * @return string[][]
+     */
+    public function provideEscapeSequences() : array
     {
         return [
             ['This is text for a description with a {@}.', 'This is text for a description with a @.'],

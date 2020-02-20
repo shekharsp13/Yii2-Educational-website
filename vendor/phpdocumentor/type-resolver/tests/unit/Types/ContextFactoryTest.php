@@ -1,36 +1,39 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * This file is part of phpDocumentor.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  *
- * @copyright 2010-2015 Mike van Riel<mike@phpdoc.org>
- * @license   http://www.opensource.org/licenses/mit-license.php MIT
  * @link      http://phpdoc.org
  */
 
 namespace phpDocumentor\Reflection\Types {
 
 // Added imports on purpose as mock for the unit tests, please do not remove.
-    use Mockery as m;
-    use phpDocumentor\Reflection\DocBlock,
-        phpDocumentor\Reflection\DocBlock\Tag;
-    use phpDocumentor;
-    use \ReflectionClass; // yes, the slash is part of the test
+    use Mockery as m, phpDocumentor;
+    use phpDocumentor\Reflection\DocBlock;
+    use phpDocumentor\Reflection\DocBlock\Tag;
+    use PHPUnit\Framework\TestCase; // yes, the slash is part of the test
+    use PHPUnit\Framework\{
+        Assert,
+        Exception as e
+    };
+    use \ReflectionClass;
+    use stdClass;
 
     /**
      * @coversDefaultClass \phpDocumentor\Reflection\Types\ContextFactory
      * @covers ::<private>
      */
-    class ContextFactoryTest extends \PHPUnit_Framework_TestCase
+    class ContextFactoryTest extends TestCase
     {
         /**
          * @covers ::createFromReflector
          * @covers ::createForNamespace
          * @uses phpDocumentor\Reflection\Types\Context
          */
-        public function testReadsNamespaceFromClassReflection()
+        public function testReadsNamespaceFromClassReflection() : void
         {
             $fixture = new ContextFactory();
             $context = $fixture->createFromReflector(new ReflectionClass($this));
@@ -43,26 +46,19 @@ namespace phpDocumentor\Reflection\Types {
          * @covers ::createForNamespace
          * @uses phpDocumentor\Reflection\Types\Context
          */
-        public function testReadsAliasesFromClassReflection()
+        public function testReadsAliasesFromClassReflection() : void
         {
             $fixture = new ContextFactory();
-            $expected = [
-                'm' => 'Mockery',
-                'DocBlock' => 'phpDocumentor\Reflection\DocBlock',
-                'Tag' => 'phpDocumentor\Reflection\DocBlock\Tag',
-                'phpDocumentor' => 'phpDocumentor',
-                'ReflectionClass' => 'ReflectionClass'
-            ];
             $context = $fixture->createFromReflector(new ReflectionClass($this));
 
-            $this->assertSame($expected, $context->getNamespaceAliases());
+            $this->assertNamespaceAliasesFrom($context);
         }
 
         /**
          * @covers ::createForNamespace
          * @uses phpDocumentor\Reflection\Types\Context
          */
-        public function testReadsNamespaceFromProvidedNamespaceAndContent()
+        public function testReadsNamespaceFromProvidedNamespaceAndContent() : void
         {
             $fixture = new ContextFactory();
             $context = $fixture->createForNamespace(__NAMESPACE__, file_get_contents(__FILE__));
@@ -74,28 +70,21 @@ namespace phpDocumentor\Reflection\Types {
          * @covers ::createForNamespace
          * @uses phpDocumentor\Reflection\Types\Context
          */
-        public function testReadsAliasesFromProvidedNamespaceAndContent()
+        public function testReadsAliasesFromProvidedNamespaceAndContent() : void
         {
             $fixture = new ContextFactory();
-            $expected = [
-                'm'               => 'Mockery',
-                'DocBlock'        => 'phpDocumentor\Reflection\DocBlock',
-                'Tag'             => 'phpDocumentor\Reflection\DocBlock\Tag',
-                'phpDocumentor' => 'phpDocumentor',
-                'ReflectionClass' => 'ReflectionClass'
-            ];
             $context = $fixture->createForNamespace(__NAMESPACE__, file_get_contents(__FILE__));
 
-            $this->assertSame($expected, $context->getNamespaceAliases());
+            $this->assertNamespaceAliasesFrom($context);
         }
 
         /**
          * @covers ::createForNamespace
          * @uses phpDocumentor\Reflection\Types\Context
          */
-        public function testTraitUseIsNotDetectedAsNamespaceUse()
+        public function testTraitUseIsNotDetectedAsNamespaceUse() : void
         {
-            $php = "<?php
+            $php = '<?php declare(strict_types=1);
                 namespace Foo;
 
                 trait FooTrait {}
@@ -103,7 +92,7 @@ namespace phpDocumentor\Reflection\Types {
                 class FooClass {
                     use FooTrait;
                 }
-            ";
+            ';
 
             $fixture = new ContextFactory();
             $context = $fixture->createForNamespace('Foo', $php);
@@ -115,9 +104,9 @@ namespace phpDocumentor\Reflection\Types {
          * @covers ::createForNamespace
          * @uses phpDocumentor\Reflection\Types\Context
          */
-        public function testAllOpeningBracesAreCheckedWhenSearchingForEndOfClass()
+        public function testAllOpeningBracesAreCheckedWhenSearchingForEndOfClass() : void
         {
-            $php = '<?php
+            $php = '<?php declare(strict_types=1);
                 namespace Foo;
 
                 trait FooTrait {}
@@ -153,10 +142,10 @@ namespace phpDocumentor\Reflection\Types {
         /**
          * @covers ::createFromReflector
          */
-        public function testEmptyFileName()
+        public function testEmptyFileName() : void
         {
             $fixture = new ContextFactory();
-            $context = $fixture->createFromReflector(new \ReflectionClass('stdClass'));
+            $context = $fixture->createFromReflector(new ReflectionClass(stdClass::class));
 
             $this->assertSame([], $context->getNamespaceAliases());
         }
@@ -164,7 +153,7 @@ namespace phpDocumentor\Reflection\Types {
         /**
          * @covers ::createFromReflector
          */
-        public function testEvalDClass()
+        public function testEvalDClass() : void
         {
             eval(<<<PHP
 namespace Foo;
@@ -175,14 +164,48 @@ class Bar
 PHP
 );
             $fixture = new ContextFactory();
-            $context = $fixture->createFromReflector(new \ReflectionClass('Foo\Bar'));
+            $context = $fixture->createFromReflector(new ReflectionClass('Foo\Bar'));
 
             $this->assertSame([], $context->getNamespaceAliases());
+        }
+
+        public function assertNamespaceAliasesFrom(Context $context)
+        {
+            $expected = [
+                'm' => m::class,
+                'DocBlock' => DocBlock::class,
+                'Tag' => Tag::class,
+                'phpDocumentor' => 'phpDocumentor',
+                'TestCase' => TestCase::class,
+                'Assert' => Assert::class,
+                'e' => e::class,
+                ReflectionClass::class => ReflectionClass::class,
+                'stdClass' => 'stdClass',
+            ];
+
+            $actual = $context->getNamespaceAliases();
+
+            // sort so that order differences don't break it
+            asort($expected);
+            asort($actual);
+
+            $this->assertSame($expected, $actual);
+        }
+
+        public function tearDown() : void
+        {
+            m::close();
         }
     }
 }
 
 namespace phpDocumentor\Reflection\Types\Mock {
+
     // the following import should not show in the tests above
-    use phpDocumentor\Reflection\DocBlock\Description;
+    use phpDocumentor\Reflection\Types\AbstractList;
+
+    class Foo extends AbstractList
+    {
+        // dummy class
+    }
 }

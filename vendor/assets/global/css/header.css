@@ -1,0 +1,15 @@
+	.navbar-default .brand
+	{
+		padding: 14px 32px;
+	}
+	.navbar-menud > li > a {
+		padding: 0px 0px 10px 20px;
+	}
+	#main-header-height
+	{
+		height: 60px;
+	}
+	.brand img
+	{
+		height: 30px;
+	} 

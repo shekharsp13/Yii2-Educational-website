@@ -7,17 +7,17 @@ use app\models\User;
 
 class AController extends \yii\web\Controller {
 	public $seoParams = [];
-	public $pageTitle = 'Talents Heart';
-	public $metaDescription = 'This is the best Tool to study and test your your skills.';
-	public $metaKeywords= 'Online Exams, Test, Goverment Jobs, Study';
+	public $pageTitle = 'ToddlerPanda';
+	public $metaDescription = 'Social Media for Your Neighbourhood';
+	public $metaKeywords= 'Social Media, Neighbourhood, Local, Dating, Nearby';
 	
 	public function beforeAction($action) {
 		$this->layout = 'guest-main';
-		if( User::isAdmin() ) {
-			$this->layout = 'main';
-		} elseif ( User::isUser() ) {
-			$this->layout = 'user-main';
-		}
+// 		if( User::isAdmin() ) {
+// 			$this->layout = 'main';
+// 		} elseif ( User::isUser() ) {
+// 			$this->layout = 'user-main';
+// 		}
 		
 		if( \Yii::$app->controller->id == 'site' && \Yii::$app->controller->action->id == 'logout' ) {
 			$user = \Yii::$app->user->identity;

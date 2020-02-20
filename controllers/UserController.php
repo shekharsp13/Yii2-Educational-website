@@ -9,6 +9,7 @@ use app\components\AController;
 use yii\filters\VerbFilter;
 use yii\web\NotFoundHttpException;
 use yii\filters\AccessControl;
+use app\models\Post;
 
 /**
  * UserController implements the CRUD actions for User model.
@@ -31,10 +32,13 @@ class UserController extends AController {
 												'create',
 												'bulk-delete',
 												'view',
+										         'timeline',
+										    'profile',
+										  
 										],
 										'allow' => true,
 										'matchCallback' => function() {
-											return User::isAdmin();
+											return User::isUser();
 										}
 								]
 						]
@@ -58,6 +62,27 @@ class UserController extends AController {
 	 * 
 	 * @return mixed
 	 */
+	
+	public function actionTimeline(){
+	    $model= new Post();
+	    $status=$model->getStatus();
+	    
+	    if(Yii::$app->user->isGuest == FALSE)
+	    {
+	        $this->layout = 'toddler-main';
+	        return $this->render('timeline',[
+	            'model'=>$model,
+	            'status'=>$status,
+	        ]);
+	    }
+	    
+	}
+	
+	public function actionProfile(){
+	    $this->layout = 'toddler-main';
+	    return $this->render('profile');
+	}
+	
 	public function actionIndex() {
 		$searchModel = new UserSearch ();
 		$dataProvider = $searchModel->search ( Yii::$app->request->queryParams );

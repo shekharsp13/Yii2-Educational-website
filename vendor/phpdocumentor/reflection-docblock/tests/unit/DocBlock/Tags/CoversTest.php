@@ -1,12 +1,13 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * This file is part of phpDocumentor.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  *
- * @copyright 2010-2015 Mike van Riel<mike@phpdoc.org>
- * @license   http://www.opensource.org/licenses/mit-license.php MIT
  * @link      http://phpdoc.org
  */
 
@@ -18,19 +19,29 @@ use phpDocumentor\Reflection\DocBlock\DescriptionFactory;
 use phpDocumentor\Reflection\Fqsen;
 use phpDocumentor\Reflection\FqsenResolver;
 use phpDocumentor\Reflection\Types\Context;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @coversDefaultClass \phpDocumentor\Reflection\DocBlock\Tags\Covers
  * @covers ::<private>
  */
-class CoversTest extends \PHPUnit_Framework_TestCase
+class CoversTest extends TestCase
 {
+    /**
+     * Call Mockery::close after each test.
+     */
+    public function tearDown() : void
+    {
+        m::close();
+    }
+
     /**
      * @uses   \phpDocumentor\Reflection\DocBlock\Tags\Covers::__construct
      * @uses   \phpDocumentor\Reflection\DocBlock\Description
+     *
      * @covers \phpDocumentor\Reflection\DocBlock\Tags\BaseTag::getName
      */
-    public function testIfCorrectTagNameIsReturned()
+    public function testIfCorrectTagNameIsReturned() : void
     {
         $fixture = new Covers(new Fqsen('\DateTime'), new Description('Description'));
 
@@ -42,10 +53,11 @@ class CoversTest extends \PHPUnit_Framework_TestCase
      * @uses   \phpDocumentor\Reflection\DocBlock\Tags\Covers::__toString
      * @uses   \phpDocumentor\Reflection\DocBlock\Tags\Formatter\PassthroughFormatter
      * @uses   \phpDocumentor\Reflection\DocBlock\Description
+     *
      * @covers \phpDocumentor\Reflection\DocBlock\Tags\BaseTag::render
      * @covers \phpDocumentor\Reflection\DocBlock\Tags\BaseTag::getName
      */
-    public function testIfTagCanBeRenderedUsingDefaultFormatter()
+    public function testIfTagCanBeRenderedUsingDefaultFormatter() : void
     {
         $fixture = new Covers(new Fqsen('\DateTime'), new Description('Description'));
 
@@ -55,9 +67,10 @@ class CoversTest extends \PHPUnit_Framework_TestCase
     /**
      * @uses   \phpDocumentor\Reflection\DocBlock\Tags\Covers::__construct
      * @uses   \phpDocumentor\Reflection\DocBlock\Description
+     *
      * @covers \phpDocumentor\Reflection\DocBlock\Tags\BaseTag::render
      */
-    public function testIfTagCanBeRenderedUsingSpecificFormatter()
+    public function testIfTagCanBeRenderedUsingSpecificFormatter() : void
     {
         $fixture = new Covers(new Fqsen('\DateTime'), new Description('Description'));
 
@@ -71,7 +84,7 @@ class CoversTest extends \PHPUnit_Framework_TestCase
      * @covers ::__construct
      * @covers ::getReference
      */
-    public function testHasReferenceToFqsen()
+    public function testHasReferenceToFqsen() : void
     {
         $expected = new Fqsen('\DateTime');
 
@@ -81,11 +94,12 @@ class CoversTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * @uses   \phpDocumentor\Reflection\DocBlock\Description
+     *
      * @covers ::__construct
      * @covers \phpDocumentor\Reflection\DocBlock\Tags\BaseTag::getDescription
-     * @uses   \phpDocumentor\Reflection\DocBlock\Description
      */
-    public function testHasDescription()
+    public function testHasDescription() : void
     {
         $expected = new Description('Description');
 
@@ -95,33 +109,35 @@ class CoversTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * @uses   \phpDocumentor\Reflection\DocBlock\Description
+     *
      * @covers ::__construct
      * @covers ::__toString
-     * @uses   \phpDocumentor\Reflection\DocBlock\Description
      */
-    public function testStringRepresentationIsReturned()
+    public function testStringRepresentationIsReturned() : void
     {
         $fixture = new Covers(new Fqsen('\DateTime'), new Description('Description'));
 
-        $this->assertSame('\DateTime Description', (string)$fixture);
+        $this->assertSame('\DateTime Description', (string) $fixture);
     }
 
     /**
-     * @covers ::create
      * @uses \phpDocumentor\Reflection\DocBlock\Tags\Covers::<public>
      * @uses \phpDocumentor\Reflection\DocBlock\DescriptionFactory
      * @uses \phpDocumentor\Reflection\FqsenResolver
      * @uses \phpDocumentor\Reflection\DocBlock\Description
      * @uses \phpDocumentor\Reflection\Fqsen
      * @uses \phpDocumentor\Reflection\Types\Context
+     *
+     * @covers ::create
      */
-    public function testFactoryMethod()
+    public function testFactoryMethod() : void
     {
         $descriptionFactory = m::mock(DescriptionFactory::class);
-        $resolver = m::mock(FqsenResolver::class);
-        $context = new Context('');
+        $resolver           = m::mock(FqsenResolver::class);
+        $context            = new Context('');
 
-        $fqsen = new Fqsen('\DateTime');
+        $fqsen       = new Fqsen('\DateTime');
         $description = new Description('My Description');
 
         $descriptionFactory
@@ -130,26 +146,17 @@ class CoversTest extends \PHPUnit_Framework_TestCase
 
         $fixture = Covers::create('DateTime My Description', $descriptionFactory, $resolver, $context);
 
-        $this->assertSame('\DateTime My Description', (string)$fixture);
+        $this->assertSame('\DateTime My Description', (string) $fixture);
         $this->assertSame($fqsen, $fixture->getReference());
         $this->assertSame($description, $fixture->getDescription());
     }
 
     /**
      * @covers ::create
-     * @expectedException \InvalidArgumentException
      */
-    public function testFactoryMethodFailsIfBodyIsNotString()
+    public function testFactoryMethodFailsIfBodyIsNotEmpty() : void
     {
-        $this->assertNull(Covers::create([]));
-    }
-
-    /**
-     * @covers ::create
-     * @expectedException \InvalidArgumentException
-     */
-    public function testFactoryMethodFailsIfBodyIsNotEmpty()
-    {
+        $this->expectException('InvalidArgumentException');
         $this->assertNull(Covers::create(''));
     }
 }

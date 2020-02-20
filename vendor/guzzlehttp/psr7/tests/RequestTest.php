@@ -6,9 +6,10 @@ use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Uri;
 
 /**
+ * @covers GuzzleHttp\Psr7\MessageTrait
  * @covers GuzzleHttp\Psr7\Request
  */
-class RequestTest extends \PHPUnit_Framework_TestCase
+class RequestTest extends BaseTest
 {
     public function testRequestUriMayBeString()
     {
@@ -90,6 +91,35 @@ class RequestTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($u1, $r1->getUri());
     }
 
+    /**
+     * @dataProvider invalidMethodsProvider
+     */
+    public function testConstructWithInvalidMethods($method)
+    {
+        $this->expectException('InvalidArgumentException');
+        new Request($method, '/');
+    }
+
+    /**
+     * @dataProvider invalidMethodsProvider
+     */
+    public function testWithInvalidMethods($method)
+    {
+        $r = new Request('get', '/');
+        $this->expectException('InvalidArgumentException');
+        $r->withMethod($method);
+    }
+
+    public function invalidMethodsProvider()
+    {
+        return [
+            [null],
+            [false],
+            [['foo']],
+            [new \stdClass()],
+        ];
+    }
+
     public function testSameInstanceWhenSameUri()
     {
         $r1 = new Request('GET', 'http://foo.com');
@@ -160,6 +190,14 @@ class RequestTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(['Host' => ['a.com']], $r->getHeaders());
         $r2 = $r->withUri(new Uri('http://www.foo.com/bar'), true);
         $this->assertEquals('a.com', $r2->getHeaderLine('Host'));
+    }
+
+    public function testWithUriSetsHostIfNotSet()
+    {
+        $r = (new Request('GET', 'http://foo.com/baz?bar=bam'))->withoutHeader('Host');
+        $this->assertEquals([], $r->getHeaders());
+        $r2 = $r->withUri(new Uri('http://www.baz.com/bar'), true);
+        $this->assertSame('www.baz.com', $r2->getHeaderLine('Host'));
     }
 
     public function testOverridesHostWithUri()

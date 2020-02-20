@@ -31,26 +31,19 @@ use yii\web\IdentityInterface;
  */
 class User extends AActiveRecord implements IdentityInterface {
 	public $confirm_password;
-	const ROLE_ADMIN = 0;
-	const ROLE_SUB_ADMIN = 1;
-	const ROLE_MANAGER = 2;
-	const ROLE_EDITOR = 3;
-	const ROLE_TEACHER = 4;
-	const ROLE_GROUP = 5;
-	const ROLE_USER = 6;
+	const ROLE_USER = 0;
+	const ROLE_ADMIN = 1;
+
 	
 	const ROLE_ACTIVE = 1;
 	const ROLE_INACTIVE = 0;
 	
 	public function getRoleOptions($id=null) {
 		$list = [
+		        self::ROLE_USER => 'User',
 				self::ROLE_ADMIN => 'Admin',
-				self::ROLE_SUB_ADMIN => 'Sub Admin',
-				self::ROLE_MANAGER => 'Manger',
-				self::ROLE_EDITOR => 'Editor',
-				self::ROLE_TEACHER => 'Teacher',
-				self::ROLE_GROUP=> 'Group',
-				self::ROLE_USER => 'User',
+
+				
 		];
 		if( $id === null )
 			return $list;
@@ -96,6 +89,15 @@ class User extends AActiveRecord implements IdentityInterface {
 		return 'Not Set';
 	}
 	
+	public function getUsername($id) {
+	    $user = self::findOne($id);
+	    
+	    if( $user ) {
+	        return $user->username;
+	    }
+	    return 'Not Set';
+	}
+	
 	public function scenarios() {
 		$scenarios = parent::scenarios ();
 		
@@ -125,13 +127,13 @@ class User extends AActiveRecord implements IdentityInterface {
 		return [ 
 				[ 
 						[ 
-								'first_name',
+// 								'first_name',
 								'email',
 								'username',
-								'auth_key',
+// 								'auth_key',
 								'password',
-								'login_source',
-								'created_at' 
+// 								'login_source',
+// 								'created_at' 
 						],
 						'required' 
 				],
@@ -161,7 +163,7 @@ class User extends AActiveRecord implements IdentityInterface {
 				],
 				[ 
 						[ 
-								'age',
+// 								'age',
 								'login_source',
 								'state_id',
 								'type_id',
@@ -192,7 +194,7 @@ class User extends AActiveRecord implements IdentityInterface {
 								'email',
 								'username',
 								'image_file',
-								'address',
+// 								'address',
 								'password',
 								'password_reset_token' 
 						],
@@ -228,40 +230,7 @@ class User extends AActiveRecord implements IdentityInterface {
 		return false;
 	}
 	
-	public static function isManager() {
-		if (isset ( \Yii::$app->user->identity )) {
-			if (\Yii::$app->user->identity->role_id == self::ROLE_MANAGER)
-				return true;
-			return false;
-		}
-		return false;
-	}
-	
-	public static function isEditor() {
-		if (isset ( \Yii::$app->user->identity )) {
-			if (\Yii::$app->user->identity->role_id == self::ROLE_EDITOR)
-				return true;
-				return false;
-		}
-		return false;
-	}
-	
-	public static function isTeacher() {
-		if (isset ( \Yii::$app->user->identity )) {
-			if (\Yii::$app->user->identity->role_id == self::ROLE_TEACHER)
-				return true;
-				return false;
-		}
-		return false;
-	}
-	public static function isGroup() {
-		if (isset ( \Yii::$app->user->identity )) {
-			if (\Yii::$app->user->identity->role_id == self::ROLE_GROUP)
-				return true;
-			return false;
-		}
-		return false;
-	}
+
 	public static function isUser() {
 		if (isset ( \Yii::$app->user->identity )) {
 			if (\Yii::$app->user->identity->role_id == self::ROLE_USER)
@@ -283,10 +252,10 @@ class User extends AActiveRecord implements IdentityInterface {
 				'email' => Yii::t ( 'app', 'Email' ),
 				'username' => Yii::t ( 'app', 'Username' ),
 				'contact_no' => Yii::t ( 'app', 'Contact No' ),
-				'age' => Yii::t ( 'app', 'Age' ),
+// 				'age' => Yii::t ( 'app', 'Age' ),
 				'dob' => Yii::t ( 'app', 'Dob' ),
 				'image_file' => Yii::t ( 'app', 'Image File' ),
-				'address' => Yii::t ( 'app', 'Address' ),
+// 				'address' => Yii::t ( 'app', 'Address' ),
 				'auth_key' => Yii::t ( 'app', 'Auth Key' ),
 				'password' => Yii::t ( 'app', 'Password' ),
 				'password_reset_token' => Yii::t ( 'app', 'Password Reset Token' ),
@@ -317,7 +286,7 @@ class User extends AActiveRecord implements IdentityInterface {
 	 * @inheritdoc
 	 */
 	public static function findIdentityByAccessToken($token, $type = null) {
-		throw new NotSupportedException ( '"findIdentityByAccessToken" is not implemented.' );
+		throw new NotSupportedException( '"findIdentityByAccessToken" is not implemented.' );
 	}
 	
 	/**

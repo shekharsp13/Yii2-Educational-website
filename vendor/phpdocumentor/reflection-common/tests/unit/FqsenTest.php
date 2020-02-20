@@ -2,20 +2,23 @@
 /**
  * phpDocumentor
  *
- * PHP Version 5.5
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  *
- * @copyright 2010-2015 Mike van Riel / Naenius (http://www.naenius.com)
+ * @copyright 2010-2018 Mike van Riel / Naenius (http://www.naenius.com)
  * @license   http://www.opensource.org/licenses/mit-license.php MIT
  * @link      http://phpdoc.org
  */
 
 namespace phpDocumentor\Reflection;
 
+use PHPUnit\Framework\TestCase;
+
 /**
  * Class FqsenTest
  * @coversDefaultClass phpDocumentor\Reflection\Fqsen
  */
-class FqsenTest extends \PHPUnit_Framework_TestCase
+class FqsenTest extends TestCase
 {
     /**
      * @param string $fqsen
@@ -24,7 +27,7 @@ class FqsenTest extends \PHPUnit_Framework_TestCase
      */
     public function testValidFormats($fqsen, $name)
     {
-        $instance  = new Fqsen($fqsen);
+        $instance = new Fqsen($fqsen);
         $this->assertEquals($name, $instance->getName());
     }
 
@@ -43,6 +46,7 @@ class FqsenTest extends \PHPUnit_Framework_TestCase
             ['\My\Space\MY_CONSTANT2', 'MY_CONSTANT2'],
             ['\My\Space\MyClass', 'MyClass'],
             ['\My\Space\MyInterface', 'MyInterface'],
+            ['\My\Space\Option«T»', 'Option«T»'],
             ['\My\Space\MyTrait', 'MyTrait'],
             ['\My\Space\MyClass::myMethod()', 'myMethod'],
             ['\My\Space\MyClass::$my_property', 'my_property'],
@@ -72,6 +76,7 @@ class FqsenTest extends \PHPUnit_Framework_TestCase
             ['\My\*'],
             ['\My\Space\.()'],
             ['My\Space'],
+            ['1_function()'],
         ];
     }
 
@@ -83,6 +88,6 @@ class FqsenTest extends \PHPUnit_Framework_TestCase
     {
         $className = new Fqsen('\\phpDocumentor\\Application');
 
-        $this->assertEquals('\\phpDocumentor\\Application', (string)$className);
+        $this->assertEquals('\\phpDocumentor\\Application', (string) $className);
     }
 }

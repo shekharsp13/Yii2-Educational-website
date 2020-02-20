@@ -1,16 +1,28 @@
 language: php
 
-php:
-  - 5.6
-  - 7.0
+matrix:
+  include:
+    - php: 5.6
+      dist: xenial
+    - php: 7.0
+      dist: xenial
+    - php: 7.1
+      dist: bionic
+    - php: 7.2
+      dist: bionic
+    - php: 7.3
+      dist: bionic
+    - php: 7.4
+      dist: bionic
 
-sudo: false
+install:
+  - travis_retry ./tools/composer update --no-interaction --no-ansi --no-progress --no-suggest
 
-before_script:
-  - composer self-update
-  - composer install --no-interaction --prefer-source --dev
+script:
+  - ./vendor/bin/phpunit --coverage-clover=coverage.xml
 
-script: ./vendor/bin/phpunit
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
 
 notifications:
   email: false

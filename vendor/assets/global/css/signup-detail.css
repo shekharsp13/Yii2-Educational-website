@@ -1,0 +1,56 @@
+.corner-ribbon {
+    width: 100px;
+    background: #e43;
+    position: absolute;
+    top: 14px;
+    left: -17px;
+    text-align: center;
+    line-height: 25px;
+    letter-spacing: 1px;
+    color: #f0f0f0;
+ 
+}
+
+.corner-ribbon::before {
+  top: 19px;
+  position: absolute;
+  z-index: -1;
+  content: '';
+  display: block;
+  border: 5px solid #e43;
+}
+.corner-ribbon::after {
+  top: -5px;
+  position: absolute;
+  z-index: -1;
+  content: '';
+  display: block;
+  border: 6px solid #e43;
+  left: 87px;
+}
+
+.corner-ribbon.top-right {
+  -webkit-transform: rotate(-46deg);
+}
+.detailbox{
+	height: 250px
+}
+.detailaddbtn{
+	position: absolute;
+	bottom: 50px;
+	left: 71px;
+}
+.metric p{
+text-align: center;
+}
+.detailbox .icon
+{
+	margin-left: 37%;
+}
+.detailheader{
+margin-top: 70px;
+}
+.boxcontent
+{
+  height: 40px;
+}

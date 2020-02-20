@@ -1,36 +1,48 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * This file is part of phpDocumentor.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  *
- * @copyright 2010-2015 Mike van Riel<mike@phpdoc.org>
- * @license   http://www.opensource.org/licenses/mit-license.php MIT
  * @link      http://phpdoc.org
  */
 
 namespace phpDocumentor\Reflection\DocBlock\Tags;
 
+use InvalidArgumentException;
 use Mockery as m;
 use phpDocumentor\Reflection\DocBlock\Description;
 use phpDocumentor\Reflection\DocBlock\DescriptionFactory;
 use phpDocumentor\Reflection\TypeResolver;
 use phpDocumentor\Reflection\Types\Context;
 use phpDocumentor\Reflection\Types\String_;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @coversDefaultClass \phpDocumentor\Reflection\DocBlock\Tags\Throws
  * @covers ::<private>
  */
-class ThrowsTest extends \PHPUnit_Framework_TestCase
+class ThrowsTest extends TestCase
 {
+    /**
+     * Call Mockery::close after each test.
+     */
+    public function tearDown() : void
+    {
+        m::close();
+    }
+
     /**
      * @uses   \phpDocumentor\Reflection\DocBlock\Tags\Throws::__construct
      * @uses   \phpDocumentor\Reflection\DocBlock\Description
+     *
      * @covers \phpDocumentor\Reflection\DocBlock\Tags\BaseTag::getName
      */
-    public function testIfCorrectTagNameIsReturned()
+    public function testIfCorrectTagNameIsReturned() : void
     {
         $fixture = new Throws(new String_(), new Description('Description'));
 
@@ -42,10 +54,11 @@ class ThrowsTest extends \PHPUnit_Framework_TestCase
      * @uses   \phpDocumentor\Reflection\DocBlock\Tags\Throws::__toString
      * @uses   \phpDocumentor\Reflection\DocBlock\Tags\Formatter\PassthroughFormatter
      * @uses   \phpDocumentor\Reflection\DocBlock\Description
+     *
      * @covers \phpDocumentor\Reflection\DocBlock\Tags\BaseTag::render
      * @covers \phpDocumentor\Reflection\DocBlock\Tags\BaseTag::getName
      */
-    public function testIfTagCanBeRenderedUsingDefaultFormatter()
+    public function testIfTagCanBeRenderedUsingDefaultFormatter() : void
     {
         $fixture = new Throws(new String_(), new Description('Description'));
 
@@ -55,9 +68,10 @@ class ThrowsTest extends \PHPUnit_Framework_TestCase
     /**
      * @uses   \phpDocumentor\Reflection\DocBlock\Tags\Throws::__construct
      * @uses   \phpDocumentor\Reflection\DocBlock\Description
+     *
      * @covers \phpDocumentor\Reflection\DocBlock\Tags\BaseTag::render
      */
-    public function testIfTagCanBeRenderedUsingSpecificFormatter()
+    public function testIfTagCanBeRenderedUsingSpecificFormatter() : void
     {
         $fixture = new Throws(new String_(), new Description('Description'));
 
@@ -71,7 +85,7 @@ class ThrowsTest extends \PHPUnit_Framework_TestCase
      * @covers ::__construct
      * @covers ::getType
      */
-    public function testHasType()
+    public function testHasType() : void
     {
         $expected = new String_();
 
@@ -81,11 +95,12 @@ class ThrowsTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * @uses   \phpDocumentor\Reflection\DocBlock\Description
+     *
      * @covers ::__construct
      * @covers \phpDocumentor\Reflection\DocBlock\Tags\BaseTag::getDescription
-     * @uses   \phpDocumentor\Reflection\DocBlock\Description
      */
-    public function testHasDescription()
+    public function testHasDescription() : void
     {
         $expected = new Description('Description');
 
@@ -95,27 +110,29 @@ class ThrowsTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * @uses   \phpDocumentor\Reflection\DocBlock\Description
+     *
      * @covers ::__construct
      * @covers ::__toString
-     * @uses   \phpDocumentor\Reflection\DocBlock\Description
      */
-    public function testStringRepresentationIsReturned()
+    public function testStringRepresentationIsReturned() : void
     {
         $fixture = new Throws(new String_(), new Description('Description'));
 
-        $this->assertSame('string Description', (string)$fixture);
+        $this->assertSame('string Description', (string) $fixture);
     }
 
     /**
-     * @covers ::create
      * @uses \phpDocumentor\Reflection\DocBlock\Tags\Throws::<public>
      * @uses \phpDocumentor\Reflection\DocBlock\DescriptionFactory
      * @uses \phpDocumentor\Reflection\TypeResolver
      * @uses \phpDocumentor\Reflection\DocBlock\Description
      * @uses \phpDocumentor\Reflection\Types\String_
      * @uses \phpDocumentor\Reflection\Types\Context
+     *
+     * @covers ::create
      */
-    public function testFactoryMethod()
+    public function testFactoryMethod() : void
     {
         $descriptionFactory = m::mock(DescriptionFactory::class);
         $resolver           = new TypeResolver();
@@ -127,44 +144,129 @@ class ThrowsTest extends \PHPUnit_Framework_TestCase
 
         $fixture = Throws::create('string My Description', $resolver, $descriptionFactory, $context);
 
-        $this->assertSame('string My Description', (string)$fixture);
+        $this->assertSame('string My Description', (string) $fixture);
         $this->assertEquals($type, $fixture->getType());
         $this->assertSame($description, $fixture->getDescription());
     }
 
     /**
+     * This test checks whether a braces in a Type are allowed.
+     *
+     * The advent of generics poses a few issues, one of them is that spaces can now be part of a type. In the past we
+     * could purely rely on spaces to split the individual parts of the body of a tag; but when there is a type in play
+     * we now need to check for braces.
+     *
+     * This test tests whether an error occurs demonstrating that the braces were taken into account; this test is still
+     * expected to produce an exception because the TypeResolver does not support generics.
+     *
+     * @uses \phpDocumentor\Reflection\DocBlock\Tags\Throws::<public>
+     * @uses \phpDocumentor\Reflection\DocBlock\DescriptionFactory
+     * @uses \phpDocumentor\Reflection\TypeResolver
+     * @uses \phpDocumentor\Reflection\DocBlock\Description
+     * @uses \phpDocumentor\Reflection\Types\String_
+     * @uses \phpDocumentor\Reflection\Types\Context
+     *
      * @covers ::create
-     * @expectedException \InvalidArgumentException
      */
-    public function testFactoryMethodFailsIfBodyIsNotString()
+    public function testFactoryMethodWithGenericWithSpace() : void
     {
-        $this->assertNull(Throws::create([]));
+        $descriptionFactory = m::mock(DescriptionFactory::class);
+        $resolver           = new TypeResolver();
+        $context            = new Context('');
+
+        $description = new Description('My Description');
+        $descriptionFactory->shouldReceive('create')
+            ->with('My Description', $context)
+            ->andReturn($description);
+
+        $fixture = Throws::create('array<string, string> My Description', $resolver, $descriptionFactory, $context);
+
+        $this->assertSame('array<string,string> My Description', (string) $fixture);
+        $this->assertEquals('array<string,string>', $fixture->getType());
+        $this->assertSame($description, $fixture->getDescription());
+    }
+
+    /**
+     * @see  self::testFactoryMethodWithGenericWithSpace()
+     * @uses \phpDocumentor\Reflection\DocBlock\Tags\Throws::<public>
+     * @uses \phpDocumentor\Reflection\DocBlock\DescriptionFactory
+     * @uses \phpDocumentor\Reflection\TypeResolver
+     * @uses \phpDocumentor\Reflection\DocBlock\Description
+     * @uses \phpDocumentor\Reflection\Types\String_
+     * @uses \phpDocumentor\Reflection\Types\Context
+     *
+     * @covers ::create
+     */
+    public function testFactoryMethodWithGenericWithSpaceAndAddedEmojisToVerifyMultiByteBehaviour() : void
+    {
+        $this->markTestSkipped('A bug in the TypeResolver breaks this test');
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('"\array😁<string,😁 😁string>" is not a valid Fqsen.');
+
+        $descriptionFactory = m::mock(DescriptionFactory::class);
+        $resolver           = new TypeResolver();
+        $context            = new Context('');
+
+        $description = new Description('My Description');
+        $descriptionFactory->shouldReceive('create')
+            ->with('My Description', $context)
+            ->andReturn($description);
+
+        Throws::create('array😁<string,😁 😁string> My Description', $resolver, $descriptionFactory, $context);
+    }
+
+    /**
+     * @uses \phpDocumentor\Reflection\DocBlock\Tags\Throws::<public>
+     * @uses \phpDocumentor\Reflection\DocBlock\DescriptionFactory
+     * @uses \phpDocumentor\Reflection\TypeResolver
+     * @uses \phpDocumentor\Reflection\DocBlock\Description
+     * @uses \phpDocumentor\Reflection\Types\String_
+     * @uses \phpDocumentor\Reflection\Types\Context
+     *
+     * @covers ::create
+     */
+    public function testFactoryMethodWithEmojisToVerifyMultiByteBehaviour() : void
+    {
+        $descriptionFactory = m::mock(DescriptionFactory::class);
+        $resolver           = new TypeResolver();
+        $context            = new Context('');
+
+        $description = new Description('My Description');
+        $descriptionFactory->shouldReceive('create')
+            ->with('My Description', $context)
+            ->andReturn($description);
+
+        $fixture = Throws::create('\My😁Class My Description', $resolver, $descriptionFactory, $context);
+
+        $this->assertSame('\My😁Class My Description', (string) $fixture);
+        $this->assertEquals('\My😁Class', $fixture->getType());
+        $this->assertSame($description, $fixture->getDescription());
     }
 
     /**
      * @covers ::create
-     * @expectedException \InvalidArgumentException
      */
-    public function testFactoryMethodFailsIfBodyIsNotEmpty()
+    public function testFactoryMethodFailsIfBodyIsNotEmpty() : void
     {
+        $this->expectException('InvalidArgumentException');
         $this->assertNull(Throws::create(''));
     }
 
     /**
      * @covers ::create
-     * @expectedException \InvalidArgumentException
      */
-    public function testFactoryMethodFailsIfResolverIsNull()
+    public function testFactoryMethodFailsIfResolverIsNull() : void
     {
+        $this->expectException('InvalidArgumentException');
         Throws::create('body');
     }
 
     /**
      * @covers ::create
-     * @expectedException \InvalidArgumentException
      */
-    public function testFactoryMethodFailsIfDescriptionFactoryIsNull()
+    public function testFactoryMethodFailsIfDescriptionFactoryIsNull() : void
     {
+        $this->expectException('InvalidArgumentException');
         Throws::create('body', new TypeResolver());
     }
 }

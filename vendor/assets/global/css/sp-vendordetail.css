@@ -1,0 +1,16 @@
+.addproduct
+{
+	width: 530px;
+	position: relative; 
+	left:126%; 
+	margin-top: 25px;
+}
+#search-btn
+{
+	background-color: #444c55;
+	border-color:#444c55; 
+	border-radius: 5px;
+}
+.border-right {
+    border-right: 1px solid black;
+}

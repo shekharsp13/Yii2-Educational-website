@@ -1,12 +1,13 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * This file is part of phpDocumentor.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  *
- * @copyright 2010-2015 Mike van Riel<mike@phpdoc.org>
- * @license   http://www.opensource.org/licenses/mit-license.php MIT
  * @link      http://phpdoc.org
  */
 
@@ -18,19 +19,29 @@ use phpDocumentor\Reflection\DocBlock\DescriptionFactory;
 use phpDocumentor\Reflection\TypeResolver;
 use phpDocumentor\Reflection\Types\Context;
 use phpDocumentor\Reflection\Types\String_;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @coversDefaultClass \phpDocumentor\Reflection\DocBlock\Tags\Var_
  * @covers ::<private>
  */
-class VarTest extends \PHPUnit_Framework_TestCase
+class VarTest extends TestCase
 {
+    /**
+     * Call Mockery::close after each test.
+     */
+    public function tearDown() : void
+    {
+        m::close();
+    }
+
     /**
      * @uses   \phpDocumentor\Reflection\DocBlock\Tags\Var_::__construct
      * @uses   \phpDocumentor\Reflection\DocBlock\Description
+     *
      * @covers \phpDocumentor\Reflection\DocBlock\Tags\BaseTag::getName
      */
-    public function testIfCorrectTagNameIsReturned()
+    public function testIfCorrectTagNameIsReturned() : void
     {
         $fixture = new Var_('myVariable', null, new Description('Description'));
 
@@ -39,13 +50,26 @@ class VarTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @uses   \phpDocumentor\Reflection\DocBlock\Tags\Var_::__construct
+     *
+     * @covers \phpDocumentor\Reflection\DocBlock\Tags\BaseTag::render
+     */
+    public function testIfVariableNameIsOmmitedIfEmpty() : void
+    {
+        $fixture = new Var_('', null, null);
+
+        $this->assertSame('@var', $fixture->render());
+    }
+
+    /**
+     * @uses   \phpDocumentor\Reflection\DocBlock\Tags\Var_::__construct
      * @uses   \phpDocumentor\Reflection\DocBlock\Tags\Var_::__toString
      * @uses   \phpDocumentor\Reflection\DocBlock\Tags\Formatter\PassthroughFormatter
      * @uses   \phpDocumentor\Reflection\DocBlock\Description
+     *
      * @covers \phpDocumentor\Reflection\DocBlock\Tags\BaseTag::render
      * @covers \phpDocumentor\Reflection\DocBlock\Tags\BaseTag::getName
      */
-    public function testIfTagCanBeRenderedUsingDefaultFormatter()
+    public function testIfTagCanBeRenderedUsingDefaultFormatter() : void
     {
         $fixture = new Var_('myVariable', new String_(), new Description('Description'));
         $this->assertSame('@var string $myVariable Description', $fixture->render());
@@ -59,9 +83,10 @@ class VarTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @uses   \phpDocumentor\Reflection\DocBlock\Tags\Var_::__construct
+     *
      * @covers \phpDocumentor\Reflection\DocBlock\Tags\BaseTag::render
      */
-    public function testIfTagCanBeRenderedUsingSpecificFormatter()
+    public function testIfTagCanBeRenderedUsingSpecificFormatter() : void
     {
         $fixture = new Var_('myVariable');
 
@@ -75,7 +100,7 @@ class VarTest extends \PHPUnit_Framework_TestCase
      * @covers ::__construct
      * @covers ::getVariableName
      */
-    public function testHasVariableName()
+    public function testHasVariableName() : void
     {
         $expected = 'myVariable';
 
@@ -88,7 +113,7 @@ class VarTest extends \PHPUnit_Framework_TestCase
      * @covers ::__construct
      * @covers ::getType
      */
-    public function testHasType()
+    public function testHasType() : void
     {
         $expected = new String_();
 
@@ -98,11 +123,12 @@ class VarTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * @uses   \phpDocumentor\Reflection\DocBlock\Description
+     *
      * @covers ::__construct
      * @covers \phpDocumentor\Reflection\DocBlock\Tags\BaseTag::getDescription
-     * @uses   \phpDocumentor\Reflection\DocBlock\Description
      */
-    public function testHasDescription()
+    public function testHasDescription() : void
     {
         $expected = new Description('Description');
 
@@ -112,26 +138,28 @@ class VarTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers ::__construct
-     * @covers ::__toString
      * @uses   \phpDocumentor\Reflection\DocBlock\Description
      * @uses   \phpDocumentor\Reflection\Types\String_
+     *
+     * @covers ::__construct
+     * @covers ::__toString
      */
-    public function testStringRepresentationIsReturned()
+    public function testStringRepresentationIsReturned() : void
     {
         $fixture = new Var_('myVariable', new String_(), new Description('Description'));
 
-        $this->assertSame('string $myVariable Description', (string)$fixture);
+        $this->assertSame('string $myVariable Description', (string) $fixture);
     }
 
     /**
-     * @covers ::create
      * @uses \phpDocumentor\Reflection\DocBlock\Tags\Var_::<public>
      * @uses \phpDocumentor\Reflection\DocBlock\DescriptionFactory
      * @uses \phpDocumentor\Reflection\DocBlock\Description
      * @uses \phpDocumentor\Reflection\Types\Context
+     *
+     * @covers ::create
      */
-    public function testFactoryMethod()
+    public function testFactoryMethod() : void
     {
         $typeResolver       = new TypeResolver();
         $descriptionFactory = m::mock(DescriptionFactory::class);
@@ -142,59 +170,43 @@ class VarTest extends \PHPUnit_Framework_TestCase
 
         $fixture = Var_::create('string $myVariable My Description', $typeResolver, $descriptionFactory, $context);
 
-        $this->assertSame('string $myVariable My Description', (string)$fixture);
+        $this->assertSame('string $myVariable My Description', (string) $fixture);
         $this->assertSame('myVariable', $fixture->getVariableName());
         $this->assertInstanceOf(String_::class, $fixture->getType());
         $this->assertSame($description, $fixture->getDescription());
     }
 
     /**
-     * @covers ::create
      * @uses \phpDocumentor\Reflection\DocBlock\Tags\Var_::<public>
      * @uses \phpDocumentor\Reflection\TypeResolver
      * @uses \phpDocumentor\Reflection\DocBlock\DescriptionFactory
-     * @expectedException \InvalidArgumentException
+     *
+     * @covers ::create
      */
-    public function testFactoryMethodFailsIfEmptyBodyIsGiven()
+    public function testFactoryMethodFailsIfEmptyBodyIsGiven() : void
     {
+        $this->expectException('InvalidArgumentException');
         $descriptionFactory = m::mock(DescriptionFactory::class);
         Var_::create('', new TypeResolver(), $descriptionFactory);
     }
 
     /**
      * @covers ::create
-     * @expectedException \InvalidArgumentException
      */
-    public function testFactoryMethodFailsIfBodyIsNotString()
+    public function testFactoryMethodFailsIfResolverIsNull() : void
     {
-        Var_::create([]);
-    }
-
-    /**
-     * @covers ::create
-     * @expectedException \InvalidArgumentException
-     */
-    public function testFactoryMethodFailsIfResolverIsNull()
-    {
+        $this->expectException('InvalidArgumentException');
         Var_::create('body');
     }
 
     /**
-     * @covers ::create
      * @uses \phpDocumentor\Reflection\TypeResolver
-     * @expectedException \InvalidArgumentException
+     *
+     * @covers ::create
      */
-    public function testFactoryMethodFailsIfDescriptionFactoryIsNull()
+    public function testFactoryMethodFailsIfDescriptionFactoryIsNull() : void
     {
+        $this->expectException('InvalidArgumentException');
         Var_::create('body', new TypeResolver());
-    }
-
-    /**
-     * @covers ::__construct
-     * @expectedException \InvalidArgumentException
-     */
-    public function testExceptionIsThrownIfVariableNameIsNotString()
-    {
-        new Var_([]);
     }
 }

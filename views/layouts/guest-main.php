@@ -40,30 +40,36 @@ AppAsset::register ( $this );
 		            </button>
 		        </div>
 		        <div class="collapse navbar-collapse navbar-menubuilder">
-		            <ul class="nav navbar-nav navbar-left">
-		                <li class="list-menu">
-		                	<a href="<?= Url::home() ?>">Home</a>
-		                </li>
+		            <ul class="nav navbar-nav navbar-right" style="margin-right: 70px">
+<!-- 		                <li class="list-menu"> -->
+<!-- 		                	<a href="< ?= Url::home() ?>">Home</a> -->
+<!-- 		                </li> -->
 		                
-		                <li class="list-menu pull-right">
+		                <li class="list-menu pull-left">
 							<?php
 							
 							if (Yii::$app->user->isGuest) {
 								echo Html::a ( 'Login', [ 
 										'/site/login' 
-								] );
+								],
+								['style'=>['color'=>'white','font-weight'=>'600']
+								    
+								]);
 							} else {
 								echo Html::a('Logout', ['/site/logout'], [
 										'data' => [
 												'method' => 'post'
 										]
-								] );
+								],
+								    ['style'=>['color'=>'white','font-weight'=>'600']
+								        
+								    ]);
 							}
 							?>
 						</li>
 						<?php  if (Yii::$app->user->isGuest) { ?>
-						<li class="list-menu">
-		                	<a href="<?= Url::toRoute(['site/signup']) ?>"> SignUp </a>
+						<li class="list-menu pull-left">
+		                	<a style="color:white; font-weight:600" href="<?= Url::toRoute(['site/index']) ?>"> SignUp </a>
 		                </li>						
 						<?php } ?>
 		            </ul>

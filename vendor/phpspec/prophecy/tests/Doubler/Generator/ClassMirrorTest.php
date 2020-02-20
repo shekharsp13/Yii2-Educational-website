@@ -2,9 +2,10 @@
 
 namespace Tests\Prophecy\Doubler\Generator;
 
+use PHPUnit\Framework\TestCase;
 use Prophecy\Doubler\Generator\ClassMirror;
 
-class ClassMirrorTest extends \PHPUnit_Framework_TestCase
+class ClassMirrorTest extends TestCase
 {
     /**
      * @test
@@ -218,14 +219,13 @@ class ClassMirrorTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @test
+     * @expectedException Prophecy\Exception\Doubler\ClassMirrorException
      */
     public function it_throws_an_exception_if_class_is_final()
     {
         $class = new \ReflectionClass('Fixtures\Prophecy\FinalClass');
 
         $mirror = new ClassMirror();
-
-        $this->setExpectedException('Prophecy\Exception\Doubler\ClassMirrorException');
 
         $mirror->reflect($class, array());
     }
@@ -261,14 +261,13 @@ class ClassMirrorTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @test
+     * @expectedException Prophecy\Exception\InvalidArgumentException
      */
     public function it_throws_an_exception_if_interface_provided_instead_of_class()
     {
         $class = new \ReflectionClass('Fixtures\Prophecy\EmptyInterface');
 
         $mirror = new ClassMirror();
-
-        $this->setExpectedException('Prophecy\Exception\InvalidArgumentException');
 
         $mirror->reflect($class, array());
     }
@@ -353,6 +352,7 @@ class ClassMirrorTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @test
+     * @expectedException InvalidArgumentException
      */
     public function it_throws_an_exception_if_class_provided_in_interfaces_list()
     {
@@ -360,19 +360,16 @@ class ClassMirrorTest extends \PHPUnit_Framework_TestCase
 
         $mirror = new ClassMirror();
 
-        $this->setExpectedException('InvalidArgumentException');
-
         $mirror->reflect(null, array($class));
     }
 
     /**
      * @test
+     * @expectedException InvalidArgumentException
      */
     public function it_throws_an_exception_if_not_reflection_provided_as_interface()
     {
         $mirror = new ClassMirror();
-
-        $this->setExpectedException('InvalidArgumentException');
 
         $mirror->reflect(null, array(null));
     }
@@ -408,6 +405,21 @@ class ClassMirrorTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @test
+     * @requires PHP 7.1
+     */
+    public function it_doesnt_fail_on_array_nullable_parameter_with_not_null_default_value()
+    {
+        $mirror = new ClassMirror();
+
+        $classNode = $mirror->reflect(new \ReflectionClass('Fixtures\Prophecy\NullableArrayParameter'), array());
+        $method = $classNode->getMethod('iHaveNullableArrayParameterWithNotNullDefaultValue');
+        $arguments = $method->getArguments();
+        $this->assertSame('array', $arguments[0]->getTypeHint());
+        $this->assertTrue($arguments[0]->isNullable());
+    }
+
+    /**
+     * @test
      */
     public function it_doesnt_fail_to_typehint_nonexistent_RQCN()
     {
@@ -417,6 +429,25 @@ class ClassMirrorTest extends \PHPUnit_Framework_TestCase
         $method = $classNode->getMethod('iHaveAnEvenStrangerTypeHintedArg');
         $arguments = $method->getArguments();
         $this->assertEquals('I\Simply\Am\Not', $arguments[0]->getTypeHint());
+    }
+
+    /**
+     * @test
+     * @requires PHP 7.2
+     */
+    function it_doesnt_fail_when_method_is_extended_with_more_params()
+    {
+        $mirror = new ClassMirror();
+
+        $classNode = $mirror->reflect(
+            new \ReflectionClass('Fixtures\Prophecy\MethodWithAdditionalParam'),
+            array(new \ReflectionClass('Fixtures\Prophecy\Named'))
+        );
+        $method = $classNode->getMethod('getName');
+        $this->assertCount(1, $method->getArguments());
+
+        $method = $classNode->getMethod('methodWithoutTypeHints');
+        $this->assertCount(2, $method->getArguments());
     }
 
     /**
@@ -450,6 +481,7 @@ class ClassMirrorTest extends \PHPUnit_Framework_TestCase
         $parameter->isDefaultValueAvailable()->willReturn(true);
         $parameter->getDefaultValue()->willReturn(null);
         $parameter->isPassedByReference()->willReturn(false);
+        $parameter->allowsNull()->willReturn(true);
         $parameter->getClass()->willReturn($class);
         if (version_compare(PHP_VERSION, '5.6', '>=')) {
             $parameter->isVariadic()->willReturn(false);
@@ -465,5 +497,21 @@ class ClassMirrorTest extends \PHPUnit_Framework_TestCase
         $argumentNode = $argumentNodes[0];
 
         $this->assertEquals('__dot_dot_dot__', $argumentNode->getName());
+    }
+
+    /**
+     * @test
+     */
+    public function case_insensitive_method_names()
+    {
+        $prophecy = $this->prophesize('ArrayObject');
+        $prophecy->offsetGet(1)->willReturn(1)->shouldBeCalledTimes(1);
+        $prophecy->offsetget(2)->willReturn(2)->shouldBeCalledTimes(1);
+        $prophecy->OffsetGet(3)->willReturn(3)->shouldBeCalledTimes(1);
+
+        $arrayObject = $prophecy->reveal();
+        self::assertSame(1, $arrayObject->offsetGet(1));
+        self::assertSame(2, $arrayObject->offsetGet(2));
+        self::assertSame(3, $arrayObject->offsetGet(3));
     }
 }
